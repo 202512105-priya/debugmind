@@ -1,0 +1,104 @@
+import re
+from typing import List, Dict, Any
+
+class RelevanceReranker:
+    @classmethod
+    def rerank(
+        cls,
+        query: str,
+        candidates: List[Dict[str, Any]],
+        top_k: int = 5
+    ) -> List[Dict[str, Any]]:
+        if not candidates:
+            return []
+
+        query_terms = [t.lower() for t in re.findall(r"\w+|[^\s]+", query) if len(t) > 1]
+        if not query_terms:
+            query_terms = [query.lower().strip()]
+
+        reranked = []
+
+        for item in candidates:
+            chunk = item["chunk"]
+            hybrid_score = item["hybrid_score"]
+            content_lower = chunk.content.lower()
+            reasons = []
+            
+            boost = 0.0
+
+            # 1. Check exact query string match
+            if query.lower() in content_lower:
+                boost += 0.25
+                reasons.append("Contains exact query phrase match.")
+
+            # 2. Check symbol & error type matches
+            matched_symbols = []
+            if chunk.symbol_name:
+                s_name = chunk.symbol_name.lower()
+                for term in query_terms:
+                    if term in s_name:
+                        matched_symbols.append(chunk.symbol_name)
+                        boost += 0.30
+                        break
+            
+            if matched_symbols:
+                reasons.append(f"Direct match for symbol '{matched_symbols[0]}'.")
+
+            # 3. Check error code/type matches
+            if chunk.error_type:
+                e_type = chunk.error_type.lower()
+                for term in query_terms:
+                    if term in e_type:
+                        boost += 0.25
+                        reasons.append(f"Exact match for error code/type '{chunk.error_type}'.")
+                        break
+
+            # 4. Check test function matches
+            if chunk.test_name:
+                t_name = chunk.test_name.lower()
+                for term in query_terms:
+                    if term in t_name:
+                        boost += 0.20
+                        reasons.append(f"Matches failed test suite '{chunk.test_name}'.")
+                        break
+
+            # 5. Check file path matches
+            if chunk.file_path:
+                f_path = chunk.file_path.lower()
+                for term in query_terms:
+                    if term in f_path:
+                        boost += 0.15
+                        reasons.append(f"File path match in '{chunk.file_path}'.")
+                        break
+
+            # Combine hybrid score and heuristic boost
+            rerank_score = min(1.0, round(0.50 * hybrid_score + 0.50 * (0.50 + min(0.50, boost)), 4))
+
+            if not reasons:
+                reasons.append("Semantic & term relevance match from hybrid search retrieval.")
+
+            reason_str = " ".join(reasons)
+
+            reranked.append({
+                "chunk_id": item["chunk_id"],
+                "file_path": item["file_path"],
+                "symbol_name": item["symbol_name"],
+                "chunk_type": item["chunk_type"],
+                "vector_score": item["vector_score"],
+                "keyword_score": item["keyword_score"],
+                "hybrid_score": item["hybrid_score"],
+                "rerank_score": rerank_score,
+                "reason": reason_str,
+                "content_preview": item["content_preview"]
+            })
+
+        # Sort by rerank score descending
+        reranked.sort(key=lambda x: x["rerank_score"], reverse=True)
+
+        # Assign 1-based ranks
+        results = []
+        for rank, item in enumerate(reranked[:top_k], start=1):
+            item["rank"] = rank
+            results.append(item)
+
+        return results
