@@ -1,0 +1,10 @@
+{
+  "description": "Streamline software debugging with AI-driven analysis of CI failures, providing developers with structured reports and actionable insights for faster resolutions.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
