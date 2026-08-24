@@ -18,10 +18,13 @@ def upload_log(log_in: UploadedLogCreate, db: Session = Depends(get_db)):
             detail=f"Project with ID {log_in.project_id} not found"
         )
         
+    from app.security.secret_redaction import redact_secrets
+    sanitized_content = redact_secrets(log_in.raw_content)
+
     db_log = UploadedLog(
         project_id=log_in.project_id,
         filename=log_in.filename,
-        raw_content=log_in.raw_content,
+        raw_content=sanitized_content,
         source_type=log_in.source_type
     )
     db.add(db_log)

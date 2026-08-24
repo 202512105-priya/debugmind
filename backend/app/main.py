@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import app.db.base
-from app.api.routes import health, projects, uploads, repositories, code_files, logs, chunks, search, debug_reports, agent_runs, evals
+from app.api.routes import health, projects, uploads, repositories, code_files, logs, chunks, search, debug_reports, agent_runs, evals, observability
 
 app = FastAPI(
     title="DebugMind API",
@@ -31,6 +31,7 @@ app.include_router(search.router, prefix="/search")
 app.include_router(debug_reports.router)
 app.include_router(agent_runs.router)
 app.include_router(evals.router)
+app.include_router(observability.router)
 
 if __name__ == "__main__":
     import uvicorn

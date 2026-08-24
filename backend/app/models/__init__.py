@@ -18,6 +18,7 @@ from app.models.eval_dataset import EvalDataset
 from app.models.eval_case import EvalCase
 from app.models.eval_run import EvalRun
 from app.models.eval_result import EvalResult
+from app.models.system_event import SystemEvent
 
 __all__ = [
     "User",
@@ -40,4 +41,5 @@ __all__ = [
     "EvalCase",
     "EvalRun",
     "EvalResult",
+    "SystemEvent",
 ]
