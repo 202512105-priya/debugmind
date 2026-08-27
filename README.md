@@ -13,8 +13,8 @@
 ## 🚀 Live Demo & Deployments
 
 - **Frontend Dashboard**: [https://debugmind-dashboard.onrender.com](https://debugmind-dashboard.onrender.com)
-- **Backend API**: [https://debugmind-api.onrender.com](https://debugmind-api.onrender.com)
-- **Interactive Swagger Docs**: [https://debugmind-api.onrender.com/docs](https://debugmind-api.onrender.com/docs)
+- **Backend API**: [https://debugmind-api-9c95.onrender.com](https://debugmind-api-9c95.onrender.com)
+- **Interactive Swagger Docs**: [https://debugmind-api-9c95.onrender.com/docs](https://debugmind-api-9c95.onrender.com/docs)
 
 ---
 
