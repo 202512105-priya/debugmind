@@ -14,8 +14,23 @@ class RepositoryIngestionService:
         ".ts": "typescript",
         ".tsx": "typescript-react",
         ".jsx": "javascript-react",
+        ".cpp": "cpp",
+        ".cc": "cpp",
+        ".cxx": "cpp",
+        ".c": "c",
+        ".h": "cpp",
+        ".hpp": "cpp",
         ".java": "java",
         ".go": "go",
+        ".rs": "rust",
+        ".rb": "ruby",
+        ".php": "php",
+        ".cs": "csharp",
+        ".sh": "bash",
+        ".bash": "bash",
+        ".kt": "kotlin",
+        ".swift": "swift",
+        ".sql": "sql",
         ".md": "markdown",
         ".txt": "text",
         ".yaml": "yaml",
@@ -32,10 +47,18 @@ class RepositoryIngestionService:
         ".env", ".DS_Store"
     }
 
+    IGNORE_EXTENSIONS = {
+        ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg", ".webp",
+        ".zip", ".tar", ".gz", ".7z", ".rar",
+        ".pdf", ".exe", ".so", ".dylib", ".dll", ".bin", ".pyc", ".o", ".a", ".woff", ".woff2", ".ttf"
+    }
+
     @classmethod
     def detect_language(cls, filename: str) -> Optional[str]:
         ext = os.path.splitext(filename)[1].lower()
-        return cls.EXTENSION_MAP.get(ext)
+        if ext in cls.IGNORE_EXTENSIONS:
+            return None
+        return cls.EXTENSION_MAP.get(ext, "text")
 
     @classmethod
     def should_ignore(cls, relative_path: str) -> bool:
