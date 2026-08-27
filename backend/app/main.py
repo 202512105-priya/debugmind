@@ -11,12 +11,16 @@ app = FastAPI(
     version="0.1.0"
 )
 
+import threading
+
 @app.on_event("startup")
 def on_startup():
-    try:
-        init_db()
-    except Exception as e:
-        print(f"Database init note: {e}")
+    def _async_init():
+        try:
+            init_db()
+        except Exception as e:
+            print(f"Database init note: {e}")
+    threading.Thread(target=_async_init, daemon=True).start()
 
 # Set up CORS middleware
 app.add_middleware(
