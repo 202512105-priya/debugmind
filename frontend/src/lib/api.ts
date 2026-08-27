@@ -29,7 +29,7 @@ if (!rawBaseUrl || rawBaseUrl.includes('localhost')) {
 if (rawBaseUrl && !rawBaseUrl.startsWith('http://') && !rawBaseUrl.startsWith('https://')) {
   rawBaseUrl = `https://${rawBaseUrl}`;
 }
-const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
+const API_BASE_URL = (rawBaseUrl || 'https://debugmind-api-9c95.onrender.com').replace(/\/+$/, '');
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;

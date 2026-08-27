@@ -42,10 +42,7 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: debugmind-api
-          property: host
+        value: https://debugmind-api-9c95.onrender.com
 
   # ---------------------------------------------------------------------------
   # 3. DebugMind Redis Caching Service
