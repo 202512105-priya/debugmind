@@ -48,8 +48,17 @@ services:
           name: debugmind-api
           property: url
 
+  # ---------------------------------------------------------------------------
+  # 3. DebugMind Redis Caching Service
+  # ---------------------------------------------------------------------------
+  - type: redis
+    name: debugmind-redis
+    region: oregon
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+
 # -----------------------------------------------------------------------------
-# Databases & Redis Caching Services
+# Databases
 # -----------------------------------------------------------------------------
 databases:
   - name: debugmind-postgres
@@ -57,9 +66,3 @@ databases:
     plan: starter
     databaseName: debugmind
     user: debugmind_user
-
-redis:
-  - name: debugmind-redis
-    region: oregon
-    plan: starter
-    maxmemoryPolicy: allkeys-lru
