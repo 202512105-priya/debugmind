@@ -102,19 +102,8 @@ def chunk_repository(repository_id: int, db: Session = Depends(get_db)):
         elif file.language in ("javascript", "typescript", "typescript-react", "javascript-react"):
             raw_chunks = JSTSChunker.chunk(file.content, file.file_path)
         else:
-            # Fallback to whole file chunk
-            from app.services.chunkers import Chunker
-            from app.services.token_estimator import estimate_token_count
-            raw_chunks = [{
-                "chunk_type": "file",
-                "symbol_name": None,
-                "start_line": 1,
-                "end_line": len(file.content.splitlines()),
-                "content": file.content,
-                "content_hash": Chunker.get_hash(file.content),
-                "token_count": estimate_token_count(file.content),
-                "metadata": {}
-            }]
+            from app.services.chunkers import GenericCodeChunker
+            raw_chunks = GenericCodeChunker.chunk(file.content, file.file_path)
 
         for rc in raw_chunks:
             h = rc["content_hash"]
@@ -245,16 +234,8 @@ def create_source_file(repository_id: int, file_in: CodeFileCreate, db: Session 
     elif lang in ("javascript", "typescript", "typescript-react", "javascript-react"):
         raw_chunks = JSTSChunker.chunk(db_file.content, db_file.file_path)
     else:
-        raw_chunks = [{
-            "chunk_type": "file",
-            "symbol_name": None,
-            "start_line": 1,
-            "end_line": line_count,
-            "content": db_file.content,
-            "content_hash": content_hash,
-            "token_count": estimate_token_count(db_file.content),
-            "metadata": {}
-        }]
+        from app.services.chunkers import GenericCodeChunker
+        raw_chunks = GenericCodeChunker.chunk(db_file.content, db_file.file_path)
 
     new_chunks = []
     for rc in raw_chunks:

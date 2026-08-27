@@ -218,6 +218,63 @@ class JSTSChunker(Chunker):
         return chunks
 
 
+class GenericCodeChunker(Chunker):
+    # Regex to extract C/C++/Java/Go/Rust/C# declarations:
+    DECLARATION_RE = re.compile(
+        r"^\s*(?:"
+        r"class\s+(\w+)|"
+        r"(?:struct|interface|enum)\s+(\w+)|"
+        r"(?:[a-zA-Z_]\w*[\*&\s]+)+\s*([a-zA-Z_]\w*)\s*\([^)]*\)\s*\{?|"
+        r"func\s+(?:\([^)]+\)\s+)?([a-zA-Z_]\w*)\s*\(|"
+        r"fn\s+([a-zA-Z_]\w*)\s*\("
+        r")"
+    )
+
+    @classmethod
+    def chunk(cls, content: str, file_path: str) -> List[Dict[str, Any]]:
+        lines = content.splitlines()
+        matches = []
+
+        for i, line in enumerate(lines):
+            m = cls.DECLARATION_RE.match(line)
+            if m:
+                symbol_name = next((g for g in m.groups() if g is not None), None)
+                if symbol_name:
+                    chunk_type = "class" if "class" in line or "struct" in line else "function"
+                    matches.append((i + 1, symbol_name, chunk_type))
+
+        if not matches:
+            return [{
+                "chunk_type": "file",
+                "symbol_name": None,
+                "start_line": 1,
+                "end_line": len(lines),
+                "content": content,
+                "content_hash": cls.get_hash(content),
+                "token_count": estimate_token_count(content),
+                "metadata": {}
+            }]
+
+        chunks = []
+        for i, (start_line, symbol_name, chunk_type) in enumerate(matches):
+            end_line = matches[i + 1][0] - 1 if i + 1 < len(matches) else len(lines)
+            chunk_content = "\n".join(lines[start_line - 1 : end_line])
+            
+            chunks.append({
+                "chunk_type": chunk_type,
+                "symbol_name": symbol_name,
+                "start_line": start_line,
+                "end_line": end_line,
+                "content": chunk_content,
+                "content_hash": cls.get_hash(chunk_content),
+                "token_count": estimate_token_count(chunk_content),
+                "metadata": {}
+            })
+
+        return chunks
+
+
+
 class LogChunker(Chunker):
     @classmethod
     def chunk(cls, raw_content: str, log_id: int) -> List[Dict[str, Any]]:

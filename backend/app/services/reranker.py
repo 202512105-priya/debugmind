@@ -36,13 +36,25 @@ class RelevanceReranker:
             if chunk.symbol_name:
                 s_name = chunk.symbol_name.lower()
                 for term in query_terms:
-                    if term in s_name:
+                    if term in s_name or s_name in term:
                         matched_symbols.append(chunk.symbol_name)
                         boost += 0.30
                         break
             
             if matched_symbols:
                 reasons.append(f"Direct match for symbol '{matched_symbols[0]}'.")
+
+            # 2b. Code language & type matching boost
+            is_code_chunk = chunk.source_type == "code" or chunk.chunk_type in ("function", "class", "method", "test_function")
+            is_markdown = (chunk.file_path and chunk.file_path.endswith(".md")) or chunk.chunk_type == "markdown_section"
+            code_query_terms = {"bool", "duplicate", "class", "function", "vector", "c++", "cpp", "solution", "int", "return", "def", "const"}
+            has_code_query_term = any(t in query_terms for t in code_query_terms)
+
+            if has_code_query_term and is_code_chunk:
+                boost += 0.35
+                reasons.append("Code chunk matches programming symbol query.")
+            elif has_code_query_term and is_markdown:
+                boost -= 0.20
 
             # 3. Check error code/type matches
             if chunk.error_type:
