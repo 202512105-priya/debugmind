@@ -85,20 +85,19 @@ def create_repository(project_id: int, repo_in: RepositoryCreate, db: Session = 
     db.commit()
     db.refresh(db_repo)
 
-    # Automatically scan, ingest, chunk & embed if GitHub URL provided
+    # Automatically scan, ingest, chunk & embed if root_path provided
     from app.services.ingestion import RepositoryIngestionService
-    if repo_in.root_path and (repo_in.source_type == "github" or RepositoryIngestionService.is_github_url(repo_in.root_path)):
+    if repo_in.root_path:
         try:
             RepositoryIngestionService.scan_and_ingest(db, db_repo.id, repo_in.root_path)
             from app.api.routes.repositories import chunk_repository
             chunk_repository(db_repo.id, db)
-            from app.api.routes.projects import index_project_embeddings
-            index_project_embeddings(project_id, db)
-            db_repo.status = "indexed"
+            db_repo.status = "completed"
+            db.add(db_repo)
             db.commit()
             db.refresh(db_repo)
         except Exception as e:
-            print(f"Warning: Automatic ingestion for GitHub repo {db_repo.id} failed: {e}")
+            print(f"Warning: Automatic ingestion for repo {db_repo.id} failed: {e}")
 
     return db_repo
 

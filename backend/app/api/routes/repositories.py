@@ -42,6 +42,10 @@ def ingest_repository(repository_id: int, db: Session = Depends(get_db)):
 
     try:
         count = RepositoryIngestionService.scan_and_ingest(db, repository_id, repo.root_path)
+        repo.status = "completed"
+        db.add(repo)
+        db.commit()
+        db.refresh(repo)
         return {
             "status": "success",
             "message": f"Successfully scanned and ingested {count} files",
@@ -148,6 +152,8 @@ def chunk_repository(repository_id: int, db: Session = Depends(get_db)):
             db.add(db_chunk)
             chunks_created += 1
 
+    repo.status = "completed"
+    db.add(repo)
     db.commit()
 
     return {
