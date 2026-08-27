@@ -37,7 +37,6 @@ services:
   - type: web
     name: debugmind-dashboard
     env: static
-    region: oregon
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
@@ -46,7 +45,7 @@ services:
         fromService:
           type: web
           name: debugmind-api
-          property: url
+          property: host
 
   # ---------------------------------------------------------------------------
   # 3. DebugMind Redis Caching Service
@@ -56,6 +55,9 @@ services:
     region: oregon
     plan: starter
     maxmemoryPolicy: allkeys-lru
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: everywhere
 
 # -----------------------------------------------------------------------------
 # Databases
