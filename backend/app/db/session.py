@@ -18,6 +18,14 @@ def get_db():
     finally:
         db.close()
 
+from sqlalchemy import text
+
 def init_db():
     import app.models
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+            conn.commit()
+    except Exception as err:
+        print(f"pgvector extension check note: {err}")
     Base.metadata.create_all(bind=engine)

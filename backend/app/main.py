@@ -3,12 +3,20 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import app.db.base
 from app.api.routes import health, projects, uploads, repositories, code_files, logs, chunks, search, debug_reports, agent_runs, evals, observability
+from app.db.session import init_db
 
 app = FastAPI(
     title="DebugMind API",
     description="DebugMind AI-powered code analysis and log debugging backend",
     version="0.1.0"
 )
+
+@app.on_event("startup")
+def on_startup():
+    try:
+        init_db()
+    except Exception as e:
+        print(f"Database init note: {e}")
 
 # Set up CORS middleware
 app.add_middleware(
