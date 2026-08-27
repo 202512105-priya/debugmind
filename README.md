@@ -1,197 +1,151 @@
-# 🧠 DebugMind
+# DebugMind: Agentic AI Reliability Engineer
 
-> **Autonomous AI Reliability Engineer for Software Teams**
+[![CI/CD Pipeline](https://github.com/202512105-priya/debugmind/actions/workflows/ci.yml/badge.svg)](https://github.com/202512105-priya/debugmind/actions)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18.0+-61DAFB.svg)](https://react.dev/)
+[![Render](https://img.shields.io/badge/Deploy-Render-purple.svg)](https://render.com)
 
-DebugMind is a production-grade AI reliability platform that analyzes failed CI logs, inspects codebase repositories, executes multi-step **LangGraph agent workflows**, and generates grounded **Retrieval-Augmented Generation (RAG) debugging reports** with strict evidence citations.
-
----
-
-## 🌟 Key Features
-
-- **📂 Multi-Source Repository Ingestion**:
-  - Connect and clone public/private **GitHub Repositories** directly (`git clone --depth 1`) or scan local workspace folder paths.
-  - Automatically parses source code files into language-specific AST symbols.
-
-- **✂️ Language-Aware AST Code Chunkers**:
-  - **Python Chunker**: Splits classes, functions, and top-level definitions.
-  - **JS/TS Chunker**: Parses ES6 modules, React components, and TypeScript interfaces.
-  - **Markdown & Log Chunkers**: Extracts structured sections, pytest failure blocks, and stack traces.
-
-- **🔍 Hybrid Vector Search & Relevance Reranker**:
-  - **Dense Vector Search**: Powered by PostgreSQL `pgvector` cosine similarity embeddings.
-  - **Sparse Keyword Search**: BM25-style term frequency matching.
-  - **Relevance Reranking**: Normalized score fusion to order evidence by exact context match.
-
-- **🤖 LangGraph Agent State Machine Workflow**:
-  - Multi-step bounded state machine pipeline:
-    `Classification Node` ➔ `Query Planner Node` ➔ `Retriever Node` ➔ `Root Cause Analyzer Node` ➔ `Citation Verifier Node` ➔ `Report Writer Node`.
-  - Automatic retry loops when evidence is weak or ungrounded.
-
-- **📑 Grounded RAG Debug Reports**:
-  - Produces structured JSON debug reports with executive summary, root cause hypothesis, suggested code fix, confidence score, and line-range evidence citations.
-
-- **🎨 Linear/Vercel Developer Dashboard**:
-  - React + TypeScript + Vite + Tailwind CSS dashboard with dark/light mode.
-  - Interactive **AST Code Viewer**, **CI Log Viewer**, **Evidence Citations**, and **LangGraph Step Telemetry Timeline**.
+> **DebugMind** is a production-style, autonomous AI reliability engineering platform that ingests source code repositories and failed CI build/test logs, performs hybrid vector + BM25 search, executes bounded multi-step **LangGraph agent workflows**, and generates grounded debug reports with line-range evidence citations.
 
 ---
 
-## 🏗️ Architecture Overview
+## 🚀 Live Demo & Deployments
 
+- **Frontend Dashboard**: [https://debugmind-dashboard.onrender.com](https://debugmind-dashboard.onrender.com)
+- **Backend API**: [https://debugmind-api.onrender.com](https://debugmind-api.onrender.com)
+- **Interactive Swagger Docs**: [https://debugmind-api.onrender.com/docs](https://debugmind-api.onrender.com/docs)
+
+---
+
+## 💡 The Problem & Solution
+
+### The Problem
+Software teams spend up to **30% of engineering time** sifting through complex CI failure logs, stack traces, and large codebases to diagnose why a test failed or why a service refused connection.
+
+### The Solution
+DebugMind automatically parses stack traces, isolates relevant code files using structure-aware AST chunking, retrieves evidence using **PostgreSQL `pgvector` hybrid search**, executes a 6-node **LangGraph state machine**, verifies hypothesis grounding, and produces an actionable root-cause analysis report.
+
+---
+
+## 📐 System Architecture Diagrams
+
+### 1. High-Level System Architecture
 ```mermaid
 flowchart TD
-    User([Software Engineer / CI Pipeline]) -->|Upload CI Logs / Connect Repos| Frontend[React + TypeScript Dashboard]
-    Frontend -->|REST API Requests| FastAPI[FastAPI Backend Engine]
-
-    subgraph Backend Infrastructure
-        FastAPI --> Ingest[Repository & Log Ingestion Service]
-        Ingest --> Chunkers[AST Code & Log Chunkers]
-        Chunkers --> DB[(PostgreSQL + pgvector)]
-        
-        FastAPI --> Search[Hybrid Search & Reranking Service]
-        Search --> DB
-        
-        FastAPI --> Agent[LangGraph State Machine Engine]
-        Agent --> Classifier[Classifier Node]
-        Classifier --> Planner[Query Planner Node]
-        Planner --> Retriever[Retriever Node]
-        Retriever --> Search
-        Retriever --> Analyzer[Root Cause Analyzer Node]
-        Analyzer --> Verifier[Citation Verifier Node]
-        Verifier --> ReportWriter[Debug Report Writer Node]
-    end
-
-    ReportWriter -->|Grounded Report & Citations| Frontend
+    User["Developer Dashboard (React + TypeScript)"] -->|REST API / CORS| API["FastAPI Backend Engine"]
+    API --> Ingest["Ingestion & AST Chunkers"]
+    API --> Hybrid["Hybrid Search (pgvector + BM25)"]
+    API --> Agent["LangGraph Agent Workflow"]
+    
+    Ingest --> DB[("PostgreSQL 17 Database + pgvector")]
+    Hybrid --> DB
+    Agent --> DB
+    
+    API --> Cache[("Redis Cache & Rate Limiter")]
 ```
 
 ---
 
-## 📁 Repository Structure
-
-```text
-debugmind/
-├── backend/
-│   ├── app/
-│   │   ├── agents/            # LangGraph state machine workflow nodes
-│   │   ├── api/routes/        # FastAPI REST endpoints (projects, repos, logs, search, reports, agent-runs)
-│   │   ├── core/              # Environment config and database settings
-│   │   ├── db/                # SQLAlchemy session setup
-│   │   ├── models/            # SQLAlchemy database models (pgvector extensions)
-│   │   ├── schemas/           # Pydantic validation schemas
-│   │   └── services/          # Ingestion, AST chunkers, embeddings, hybrid search, reranker, RAG generator
-│   ├── tests/                 # 27/27 passing Pytest test suite
-│   ├── pyproject.toml
-│   └── Dockerfile
-├── frontend/
-│   ├── src/
-│   │   ├── components/        # AppShell, Sidebar, Topbar, CodeViewer, LogViewer, EvidenceCard, AgentTimeline
-│   │   ├── features/          # Projects, Repositories, CI Logs, Analysis, Debug Reports, Agent Trace
-│   │   ├── lib/               # TanStack Query API client & formatters
-│   │   ├── routes/            # React Router page navigation
-│   │   └── types/             # TypeScript interface schemas
-│   ├── package.json
-│   └── vite.config.ts
-├── docker-compose.yml
-└── README.md
+### 2. Multi-Stage Hybrid RAG Search Pipeline
+```mermaid
+flowchart LR
+    Query["Raw Query / CI Log Error"] --> Dense["Dense Vector Search (pgvector)"]
+    Query --> Sparse["Sparse Keyword Search (BM25)"]
+    
+    Dense --> Fusion["Score Fusion & Reranker"]
+    Sparse --> Fusion
+    
+    Fusion --> Evidence["Top 5 Ranked Evidence Chunks"]
 ```
 
 ---
 
-## 🚀 Quickstart & Local Setup
+### 3. LangGraph Agent State Machine Workflow
+```mermaid
+flowchart TD
+    Start([Start]) --> Classify["1. Failure Classifier"]
+    Classify --> Plan["2. Query Planner"]
+    Plan --> Retrieve["3. Hybrid Retriever"]
+    Retrieve --> Analyze["4. Root Cause Analyzer"]
+    Analyze --> Verify["5. Evidence Verifier"]
+    
+    Verify -->|Grounded = False & Retry < 2| Plan
+    Verify -->|Grounded = True| Write["6. Report Writer"]
+    Write --> End([End Report Generated])
+```
+
+---
+
+## 📈 Evaluation Benchmark Results
+
+Evaluated across the `DebugMind Golden Baseline v1.0` dataset containing 5 synthetic failure scenarios (`payments-api`):
+
+| Metric | Score / Rate | Benchmark Target | Status |
+| :--- | :--- | :--- | :--- |
+| **Cases Evaluated** | `5` | 5+ cases | ✅ Passed |
+| **Retrieval Recall@5** | `100.0%` | $\ge 80\%$ | ✅ Passed |
+| **Retrieval Precision@5** | `100.0%` | $\ge 50\%$ | ✅ Passed |
+| **Root Cause Correctness** | `5.00 / 5.0` | $\ge 4.0 / 5.0$ | ✅ Passed |
+| **Evidence Groundedness** | `4.50 / 5.0` | $\ge 4.0 / 5.0$ | ✅ Passed |
+| **Suggested Fix Relevance** | `4.73 / 5.0` | $\ge 4.0 / 5.0$ | ✅ Passed |
+| **Hallucination Risk Score** | `1.00 / 5.0` | $\le 1.5 / 5.0$ | ✅ Passed |
+| **Format Validity Rate** | `100.0%` | $100\%$ | ✅ Passed |
+| **Average Latency per Case** | `4.7 ms` | $< 2000\text{ ms}$ | ✅ Passed |
+| **Average Cost per Case** | `$0.0080` | $< \$0.02$ | ✅ Passed |
+
+---
+
+## 🛠️ Tech Stack & Architecture
+
+- **Backend Engine**: Python 3.9, FastAPI, Uvicorn, Pydantic v2, SQLAlchemy, Alembic.
+- **AI & Agent Workflow**: LangGraph, LangChain, OpenAI (`gpt-4o-mini`, `text-embedding-3-small`).
+- **Database & Search Engine**: PostgreSQL 17, `pgvector` extension, BM25 term frequency matching.
+- **Cache & Security**: Redis (In-memory fallback), regex secret redactor, sliding-window rate limiter.
+- **Frontend Dashboard**: React 18, TypeScript, Vite, Tailwind CSS, Lucide Icons.
+- **Deployment & Infrastructure**: Render (Web Service + Static Site + PostgreSQL + Redis), Docker, GitHub Actions CI.
+
+---
+
+## 💻 Local Quickstart Guide
 
 ### Prerequisites
-
-- **Python**: 3.9+
-- **Node.js**: 18+
-- **PostgreSQL**: 17 (with `pgvector` extension enabled)
-
----
+- Python 3.9+
+- Node.js 18+
+- PostgreSQL 17 with `pgvector`
 
 ### 1. Backend Setup
-
 ```bash
 cd backend
-
-# Create virtual environment
 python3 -m venv venv
 source venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Run database migrations (or auto-create tables)
-python3 -c "from app.db.session import init_db; init_db()"
-
-# Launch FastAPI development server
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-
-Backend server runs at: `http://localhost:8000`  
-Interactive Swagger API docs at: `http://localhost:8000/docs`
-
----
 
 ### 2. Frontend Setup
-
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start Vite development server
-npm run dev -- --port 5173
+npm run dev
 ```
 
-Frontend dashboard runs at: `http://localhost:5173`
-
----
-
-### 3. Docker Compose Setup (Containerized)
-
+### 3. Run Benchmark Evaluations
 ```bash
-docker-compose up --build
+python3 evals/scripts/run_eval.py
 ```
 
 ---
 
-## 🧪 Testing & Verification
+## 📂 Documentation Directory (`docs/`)
 
-### Run Backend Unit Tests
-
-```bash
-cd backend
-pytest -v
-```
-> **Result**: `27 passed` across all modules (ingestion, AST chunking, embeddings, hybrid search, RAG generator, LangGraph workflow).
-
-### Run Frontend Typecheck & Production Build
-
-```bash
-cd frontend
-npm run lint    # Runs tsc --noEmit
-npm run build   # Compiles Vite production bundle
-```
+- [`docs/architecture.md`](docs/architecture.md): Deep-dive into AST chunking and search fusion algorithms.
+- [`docs/api.md`](docs/api.md): Full REST API endpoint reference.
+- [`docs/eval-report.md`](docs/eval-report.md): Detailed evaluation harness breakdown.
+- [`docs/deployment.md`](docs/deployment.md): Step-by-step Render deployment guide.
+- [`docs/interview-cheat-sheet.md`](docs/interview-cheat-sheet.md): Placement interview Q&A guide.
 
 ---
 
-## 📡 API Reference Summary
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` / `POST` | `/projects` | List or create workspace projects |
-| `POST` | `/projects/{id}/repositories` | Connect GitHub repo or local folder |
-| `POST` | `/repositories/{id}/ingest` | Scan and ingest source code files |
-| `POST` | `/repositories/{id}/chunk` | Run language-aware AST symbol chunking |
-| `POST` | `/projects/{id}/embeddings/index` | Build vector embeddings in PostgreSQL `pgvector` |
-| `POST` | `/projects/{id}/logs` | Upload raw CI build or test logs |
-| `POST` | `/logs/{id}/parse` | Extract pytest failure events and stack traces |
-| `POST` | `/search/hybrid` | Execute hybrid vector + keyword semantic search |
-| `POST` | `/debug-reports` | Generate grounded RAG debugging report |
-| `POST` | `/agent-runs` | Execute LangGraph multi-step debugging state machine |
-
----
-
-## 📜 License
-
-Distributed under the MIT License. Developed for software teams building reliable software.
+## 📄 License
+MIT License. Created by [Priya Shah](https://github.com/202512105-priya).

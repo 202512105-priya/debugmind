@@ -1,0 +1,86 @@
+name: DebugMind CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-test:
+    name: Backend Pytest & Evaluation Checks
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: priyashah
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: debugmind
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pytest Test Suite
+        env:
+          DATABASE_URL: postgresql://priyashah:postgrespassword@localhost:5432/debugmind
+        run: |
+          cd backend
+          pytest -v
+
+      - name: Run Phase 7 Evaluation Smoke Test
+        env:
+          DATABASE_URL: postgresql://priyashah:postgrespassword@localhost:5432/debugmind
+        run: |
+          python3 evals/scripts/run_eval.py
+
+  frontend-build:
+    name: Frontend Typecheck & Vite Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run TypeScript Lint Check
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Run Production Vite Build
+        run: |
+          cd frontend
+          npm run build
