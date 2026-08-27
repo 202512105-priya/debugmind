@@ -67,9 +67,12 @@ content:
         report.evidence = filtered_evidence
 
         # If evidence was wiped out or likely_root_cause has zero valid citations, flag abstention
+        if report.missing_information is None:
+            report.missing_information = []
+
         if not filtered_evidence and report.likely_root_cause:
             report.confidence = min(report.confidence, 0.4)
-            if "Citations were unverified" not in report.missing_information:
+            if "Citations were unverified against retrieved evidence." not in report.missing_information:
                 report.missing_information.append("Citations were unverified against retrieved evidence.")
 
         return report

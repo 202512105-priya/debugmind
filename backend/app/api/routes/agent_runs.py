@@ -69,12 +69,15 @@ def run_agent_workflow(req: AgentRunCreateRequest, db: Session = Depends(get_db)
         db.refresh(run)
     except Exception as e:
         logger.error(f"Agent run {run.id} failed: {e}")
-        run.status = "failed"
-        run.error_message = str(e)
-        run.completed_at = datetime.datetime.now(datetime.timezone.utc)
-        db.add(run)
-        db.commit()
-        db.refresh(run)
+        db.rollback()
+        failed_run = db.query(AgentRun).filter(AgentRun.id == run.id).first()
+        if failed_run:
+            failed_run.status = "failed"
+            failed_run.error_message = str(e)
+            failed_run.completed_at = datetime.datetime.now(datetime.timezone.utc)
+            db.add(failed_run)
+            db.commit()
+            db.refresh(failed_run)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Agent workflow execution failed: {str(e)}"

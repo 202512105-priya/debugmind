@@ -223,6 +223,8 @@ class HybridSearchService:
                 "file_path": chunk.file_path,
                 "symbol_name": chunk.symbol_name,
                 "chunk_type": chunk.chunk_type,
+                "start_line": chunk.start_line,
+                "end_line": chunk.end_line,
                 "vector_score": round(v_raw, 4),
                 "keyword_score": round(k_raw, 4),
                 "hybrid_score": round(hybrid_score, 4),
