@@ -231,6 +231,7 @@ def report_writer_node(state: DebugAgentState, config: Optional[RunnableConfig] 
     project_id = state.get("project_id", 0)
     log_id = state.get("uploaded_log_id")
     query = state.get("query", "")
+    retrieved_chunks = state.get("retrieved_chunks", [])
 
     final_report_id = None
     if db:
@@ -239,7 +240,8 @@ def report_writer_node(state: DebugAgentState, config: Optional[RunnableConfig] 
             project_id=project_id,
             uploaded_log_id=log_id,
             user_query=query,
-            top_k=5
+            top_k=5,
+            pre_retrieved_chunks=retrieved_chunks if retrieved_chunks else None
         )
         final_report_id = report.id
 

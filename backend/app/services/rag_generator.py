@@ -84,7 +84,8 @@ content:
         project_id: int,
         uploaded_log_id: Optional[int] = None,
         user_query: Optional[str] = None,
-        top_k: int = 5
+        top_k: int = 5,
+        pre_retrieved_chunks: Optional[List[Dict[str, Any]]] = None
     ) -> DebugReport:
         # 1. Prepare search query and log context
         log_content = ""
@@ -94,7 +95,7 @@ content:
                 log_content = log.raw_content[:500]  # snippet for query expansion
 
         search_query_parts = []
-        if user_query:
+        if user_query and user_query.strip().lower() not in ("string", "null", "none", ""):
             search_query_parts.append(user_query)
         if log_content:
             search_query_parts.append(log_content[:200])
@@ -108,33 +109,37 @@ content:
         elif user_query and ("[Target Scope: CI Failure Logs]" in user_query or "[Target Scope: Log]" in user_query):
             target_source_type = "log"
 
-        # 2. Retrieve top evidence chunks using Two-Stage Hybrid Retrieval + Reranking
-        hybrid_candidates = HybridSearchService.search_hybrid(
-            db=db,
-            project_id=project_id,
-            query=effective_query,
-            top_k=top_k * 3,
-            alpha=0.65,
-            source_type=target_source_type,
-            uploaded_log_id=uploaded_log_id
-        )
-
-        reranked_results = RelevanceReranker.rerank(
-            query=effective_query,
-            candidates=hybrid_candidates,
-            top_k=top_k
-        )
-
-        # Map candidate chunks for prompt context formatting
         retrieved_items = []
         valid_chunk_ids = set()
-        for r in reranked_results:
-            cid = r["chunk_id"]
-            valid_chunk_ids.add(cid)
-            # Find candidate object in hybrid_candidates
-            cand = next((c for c in hybrid_candidates if c["chunk_id"] == cid), None)
-            if cand:
-                retrieved_items.append(cand)
+
+        if pre_retrieved_chunks:
+            retrieved_items = pre_retrieved_chunks[:top_k]
+            valid_chunk_ids = {c["chunk_id"] for c in retrieved_items if "chunk_id" in c}
+        else:
+            # 2. Retrieve top evidence chunks using Two-Stage Hybrid Retrieval + Reranking
+            hybrid_candidates = HybridSearchService.search_hybrid(
+                db=db,
+                project_id=project_id,
+                query=effective_query,
+                top_k=top_k * 3,
+                alpha=0.65,
+                source_type=target_source_type,
+                uploaded_log_id=uploaded_log_id
+            )
+
+            reranked_results = RelevanceReranker.rerank(
+                query=effective_query,
+                candidates=hybrid_candidates,
+                top_k=top_k
+            )
+
+            # Map candidate chunks for prompt context formatting
+            for r in reranked_results:
+                cid = r["chunk_id"]
+                valid_chunk_ids.add(cid)
+                cand = next((c for c in hybrid_candidates if c["chunk_id"] == cid), None)
+                if cand:
+                    retrieved_items.append(cand)
 
         # 3. Format context string
         context_str = cls.format_context(retrieved_items)
