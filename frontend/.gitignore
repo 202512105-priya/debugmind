@@ -7,7 +7,6 @@ build/
 vite.config.*.timestamp-*
 *.tsbuildinfo
 *-debug.log*
-logs/
 *.log
 .claude-replay.*
 .tmp-*
