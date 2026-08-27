@@ -34,8 +34,9 @@ services:
   # ---------------------------------------------------------------------------
   # 2. DebugMind React + Vite Frontend Static Site
   # ---------------------------------------------------------------------------
-  - type: static
+  - type: web
     name: debugmind-dashboard
+    env: static
     region: oregon
     rootDir: frontend
     buildCommand: npm install && npm run build
