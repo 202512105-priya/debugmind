@@ -29,7 +29,8 @@ def init_db():
     try:
         with engine.connect() as conn:
             conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+            conn.execute(text("ALTER TABLE repositories ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending';"))
             conn.commit()
     except Exception as err:
-        print(f"pgvector extension check note: {err}")
+        print(f"pgvector/schema extension check note: {err}")
     Base.metadata.create_all(bind=engine)
