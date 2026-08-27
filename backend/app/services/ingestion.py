@@ -86,17 +86,54 @@ class RepositoryIngestionService:
             clean_url = clean_url + ".git"
 
         temp_dir = tempfile.mkdtemp(prefix="debugmind_github_")
+
+        # 1. Try git clone first
         try:
-            res = subprocess.run(
+            subprocess.run(
                 ["git", "clone", "--depth", "1", clean_url, temp_dir],
                 check=True,
                 capture_output=True,
                 timeout=60
             )
             return temp_dir
-        except Exception as e:
+        except Exception as git_err:
             shutil.rmtree(temp_dir, ignore_errors=True)
-            raise ValueError(f"Failed to clone GitHub repository '{clean_url}': {str(e)}")
+
+        # 2. ZIP archive fallback (works on cloud servers without git CLI)
+        try:
+            import urllib.request
+            import zipfile
+            import io
+
+            clean_path = clean_url.replace("https://github.com/", "").replace("http://github.com/", "").replace(".git", "").strip("/")
+            zip_dir = tempfile.mkdtemp(prefix="debugmind_zip_")
+            zip_urls = [
+                f"https://github.com/{clean_path}/archive/refs/heads/main.zip",
+                f"https://github.com/{clean_path}/archive/refs/heads/master.zip"
+            ]
+
+            downloaded = False
+            for z_url in zip_urls:
+                try:
+                    req = urllib.request.Request(z_url, headers={"User-Agent": "DebugMind/1.0"})
+                    with urllib.request.urlopen(req, timeout=30) as resp:
+                        zip_bytes = resp.read()
+                        with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+                            zf.extractall(zip_dir)
+                            downloaded = True
+                            break
+                except Exception:
+                    continue
+
+            if downloaded:
+                subdirs = [os.path.join(zip_dir, d) for d in os.listdir(zip_dir) if os.path.isdir(os.path.join(zip_dir, d))]
+                if subdirs:
+                    return subdirs[0]
+                return zip_dir
+
+            raise ValueError(f"Could not download repository archive from {github_url}")
+        except Exception as e:
+            raise ValueError(f"Failed to ingest GitHub repository '{github_url}': {str(e)}")
 
     @classmethod
     def scan_and_ingest(cls, db: Session, repository_id: int, root_path: str) -> int:
