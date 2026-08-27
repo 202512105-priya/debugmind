@@ -38,7 +38,11 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...(options.headers || {}),
   };
 
-  const response = await fetch(url, { ...options, headers });
+  const response = await fetch(url, {
+    mode: 'cors',
+    ...options,
+    headers,
+  });
 
   if (!response.ok) {
     let errorMessage = `HTTP error ${response.status}: ${response.statusText}`;

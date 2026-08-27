@@ -25,10 +25,17 @@ def on_startup():
 # Set up CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://debugmind-dashboard.onrender.com",
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "*"
+    ],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    max_age=0,
 )
 
 # Include Routers
