@@ -16,7 +16,16 @@ import {
   RerankSearchResult
 } from '../types';
 
-let rawBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+let rawBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+if (!rawBaseUrl || rawBaseUrl.includes('localhost')) {
+  if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+    rawBaseUrl = 'https://debugmind-api-9c95.onrender.com';
+  } else {
+    rawBaseUrl = 'http://localhost:8000';
+  }
+}
+
 if (rawBaseUrl && !rawBaseUrl.startsWith('http://') && !rawBaseUrl.startsWith('https://')) {
   rawBaseUrl = `https://${rawBaseUrl}`;
 }
