@@ -11,8 +11,8 @@ export const LoginPage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Store mock token
     localStorage.setItem('debugmind_token', 'mock_jwt_token_debugmind');
+    localStorage.setItem('debugmind_user_email', email || 'dev@debugmind.ai');
     setTimeout(() => {
       setLoading(false);
       navigate('/projects');

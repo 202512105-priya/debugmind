@@ -31,8 +31,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ projectName }) => {
 
   const isProjectWorkspace = Boolean(projectId);
 
+  const userEmail = localStorage.getItem('debugmind_user_email') || 'dev@debugmind.ai';
+
   const handleLogout = () => {
     localStorage.removeItem('debugmind_token');
+    localStorage.removeItem('debugmind_user_email');
     navigate('/login');
   };
 
@@ -153,7 +156,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ projectName }) => {
             </div>
             <div className="min-w-0">
               <div className="text-[12px] font-medium text-slate-200 truncate">Developer</div>
-              <div className="text-[10px] text-slate-500 truncate">dev@debugmind.ai</div>
+              <div className="text-[10px] text-slate-500 truncate">{userEmail}</div>
             </div>
           </div>
           <button
