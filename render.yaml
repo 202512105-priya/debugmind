@@ -7,6 +7,7 @@ services:
     env: python
     region: oregon
     plan: free
+    autoDeploy: true
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: sh -c "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
@@ -37,6 +38,7 @@ services:
   - type: web
     name: debugmind-dashboard
     env: static
+    autoDeploy: true
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
