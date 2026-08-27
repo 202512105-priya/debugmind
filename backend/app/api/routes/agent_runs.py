@@ -101,3 +101,13 @@ def list_agent_steps(agent_run_id: int, db: Session = Depends(get_db)):
             detail=f"Agent run with ID {agent_run_id} not found"
         )
     return run.steps
+
+@router.get("/projects/{project_id}/agent-runs", response_model=List[AgentRunRead])
+def list_project_agent_runs(project_id: int, db: Session = Depends(get_db)):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Project with ID {project_id} not found"
+        )
+    return db.query(AgentRun).filter(AgentRun.project_id == project_id).order_by(AgentRun.id.desc()).all()

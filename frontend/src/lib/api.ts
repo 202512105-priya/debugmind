@@ -13,7 +13,8 @@ import {
   AgentRun,
   AgentRunCreate,
   AgentStep,
-  RerankSearchResult
+  RerankSearchResult,
+  RerankSearchResponse
 } from '../types';
 
 let rawBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -140,7 +141,7 @@ export const api = {
     request<Chunk[]>(`/projects/${projectId}/chunks`),
   getChunk: (chunkId: number) => request<Chunk>(`/chunks/${chunkId}`),
   searchRerank: (data: { project_id: number; query: string; top_k?: number }) =>
-    request<RerankSearchResult[]>('/search/rerank', {
+    request<RerankSearchResponse>('/search/rerank', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -164,6 +165,8 @@ export const api = {
     }),
   getAgentRun: (agentRunId: number) =>
     request<AgentRun>(`/agent-runs/${agentRunId}`),
+  getProjectAgentRuns: (projectId: number) =>
+    request<AgentRun[]>(`/projects/${projectId}/agent-runs`),
   getAgentRunSteps: (agentRunId: number) =>
     request<AgentStep[]>(`/agent-runs/${agentRunId}/steps`),
 };

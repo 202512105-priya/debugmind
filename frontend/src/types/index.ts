@@ -165,3 +165,8 @@ export interface RerankSearchResult extends HybridSearchResult {
   reason: string;
   rank: number;
 }
+
+export interface RerankSearchResponse {
+  query: string;
+  results: RerankSearchResult[];
+}
