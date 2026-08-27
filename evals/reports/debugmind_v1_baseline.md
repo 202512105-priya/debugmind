@@ -1,9 +1,9 @@
 # DebugMind Evaluation Benchmark Report
 
 - **Run Name**: debugmind-v1-baseline
-- **Eval Run ID**: 4
+- **Eval Run ID**: 7
 - **Dataset ID**: 1
-- **Date**: 2026-08-27 19:22:05 UTC
+- **Date**: 2026-08-27 20:45:27 UTC
 - **Status**: COMPLETED
 
 ---
@@ -20,7 +20,7 @@
 | **Fix Relevance Score** | `4.73 / 5.0` | $\ge 4.0 / 5.0$ |
 | **Hallucination Risk Score** | `1.00 / 5.0` | $\le 1.5 / 5.0$ |
 | **Format Validity Rate** | `100.0%` | $100\%$ |
-| **Avg Latency per Case** | `4.8 ms` | $< 2000\text{ ms}$ |
+| **Avg Latency per Case** | `4.9 ms` | $< 2000\text{ ms}$ |
 | **Avg Cost per Case** | `$0.0080` | $< \$0.02$ |
 
 ---
