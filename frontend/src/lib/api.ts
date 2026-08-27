@@ -16,7 +16,11 @@ import {
   RerankSearchResult
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+let rawBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+if (rawBaseUrl && !rawBaseUrl.startsWith('http://') && !rawBaseUrl.startsWith('https://')) {
+  rawBaseUrl = `https://${rawBaseUrl}`;
+}
+const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
