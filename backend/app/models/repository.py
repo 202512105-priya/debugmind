@@ -12,6 +12,7 @@ class Repository(Base):
     clone_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     source_type: Mapped[str] = mapped_column(String(50), default="local")
     root_path: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    status: Mapped[Optional[str]] = mapped_column(String(50), default="pending")
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

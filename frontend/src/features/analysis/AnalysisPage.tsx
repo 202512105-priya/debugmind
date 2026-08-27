@@ -262,7 +262,7 @@ export const AnalysisPage: React.FC = () => {
 
               {agentRun.final_report_id && (
                 <button
-                  onClick={() => navigate(`/projects/${id}/reports`)}
+                  onClick={() => navigate(`/reports/${agentRun.final_report_id}`)}
                   className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-[12px] font-semibold shadow-sm transition-all"
                 >
                   <span>Open Debug Report #{agentRun.final_report_id}</span>

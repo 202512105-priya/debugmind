@@ -93,7 +93,7 @@ def deep_health_check(db: Session = Depends(get_db)):
 
     # 2. Database check
     try:
-        db.execute(func.now())
+        db.execute(text("SELECT 1"))
         health_status["services"]["database"] = {"status": "ok"}
     except Exception as e:
         health_status["status"] = "degraded"

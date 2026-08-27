@@ -14,8 +14,8 @@ class ChunkEmbedding(Base):
     embedding_model: Mapped[str] = mapped_column(String(100), nullable=False)
     embedding_dimension: Mapped[int] = mapped_column(Integer, nullable=False)
     
-    # Utilizing pgvector column type with dimension 384
-    embedding: Mapped[list] = mapped_column(Vector(384), nullable=False)
+    # Utilizing pgvector column type
+    embedding: Mapped[list] = mapped_column(Vector, nullable=False)
 
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

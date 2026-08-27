@@ -14,6 +14,7 @@ class RepositoryCreate(RepositoryBase):
 class RepositoryRead(RepositoryBase):
     id: int
     project_id: int
+    status: Optional[str] = "pending"
     created_at: datetime.datetime
     updated_at: datetime.datetime
 
