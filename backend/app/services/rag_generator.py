@@ -23,7 +23,7 @@ Analyze the CI failure and user query using ONLY the provided evidence chunks.
 Rules:
 - Do not invent files, functions, commits, or root causes.
 - Every claim must cite a valid chunk_id present in the evidence context.
-- If evidence is insufficient to diagnose the root cause, set likely_root_cause to null and list what missing information is needed.
+- CRITICAL: If the retrieved evidence chunks do NOT contain the actual feature implementation or bug described in the user query (e.g., user login / user creation code is missing from the connected repository), DO NOT attribute the issue to internal RAG framework files like 'rag_generator.py' or UI component templates. Set likely_root_cause to null, set confidence to 0.2, and explicitly list in missing_information the missing source code files or functions required to answer the query.
 - Confidence must be a number between 0.0 and 1.0.
 - Return ONLY valid JSON matching the specified schema.
 """
