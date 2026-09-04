@@ -49,13 +49,17 @@ class HybridSearchService:
         if not terms:
             terms = [query.lower().strip()]
 
-        # Query chunks for project
-        q = db.query(Chunk).filter(Chunk.project_id == project_id)
+        # Query chunks for project (excluding mock UI pasted_text files)
+        q = db.query(Chunk).filter(
+            Chunk.project_id == project_id,
+            ~Chunk.file_path.ilike("%pasted_text%"),
+            ~Chunk.file_path.ilike("%ui-components%")
+        )
 
         if repository_id:
             q = q.filter(Chunk.repository_id == repository_id)
         if uploaded_log_id:
-            q = q.filter(Chunk.uploaded_log_id == uploaded_log_id)
+            q = q.filter(or_(Chunk.uploaded_log_id == uploaded_log_id, Chunk.uploaded_log_id.is_(None)))
         if source_type and source_type.strip().lower() not in ("", "string"):
             q = q.filter(Chunk.source_type == source_type)
         if chunk_type and chunk_type.strip().lower() not in ("", "string"):
@@ -147,12 +151,16 @@ class HybridSearchService:
         if is_sqlite:
             q_emb = db.query(ChunkEmbedding, Chunk).join(
                 Chunk, Chunk.id == ChunkEmbedding.chunk_id
-            ).filter(Chunk.project_id == project_id)
+            ).filter(
+                Chunk.project_id == project_id,
+                ~Chunk.file_path.ilike("%pasted_text%"),
+                ~Chunk.file_path.ilike("%ui-components%")
+            )
 
             if repository_id:
                 q_emb = q_emb.filter(Chunk.repository_id == repository_id)
             if uploaded_log_id:
-                q_emb = q_emb.filter(Chunk.uploaded_log_id == uploaded_log_id)
+                q_emb = q_emb.filter(or_(Chunk.uploaded_log_id == uploaded_log_id, Chunk.uploaded_log_id.is_(None)))
             if source_type and source_type.strip().lower() not in ("", "string"):
                 q_emb = q_emb.filter(Chunk.source_type == source_type)
             if chunk_type and chunk_type.strip().lower() not in ("", "string"):
@@ -171,12 +179,16 @@ class HybridSearchService:
             distance = ChunkEmbedding.embedding.cosine_distance(query_vector)
             q_emb = db.query(ChunkEmbedding, Chunk, (1 - distance).label("similarity")).join(
                 Chunk, Chunk.id == ChunkEmbedding.chunk_id
-            ).filter(Chunk.project_id == project_id)
+            ).filter(
+                Chunk.project_id == project_id,
+                ~Chunk.file_path.ilike("%pasted_text%"),
+                ~Chunk.file_path.ilike("%ui-components%")
+            )
 
             if repository_id:
                 q_emb = q_emb.filter(Chunk.repository_id == repository_id)
             if uploaded_log_id:
-                q_emb = q_emb.filter(Chunk.uploaded_log_id == uploaded_log_id)
+                q_emb = q_emb.filter(or_(Chunk.uploaded_log_id == uploaded_log_id, Chunk.uploaded_log_id.is_(None)))
             if source_type and source_type.strip().lower() not in ("", "string"):
                 q_emb = q_emb.filter(Chunk.source_type == source_type)
             if chunk_type and chunk_type.strip().lower() not in ("", "string"):

@@ -118,13 +118,13 @@ class LLMClient:
         top_chunk = retrieved_chunks[0]
         top_file = top_chunk.get("file_path") or "retrieved codebase"
         top_symbol = top_chunk.get("symbol_name") or ""
-        top_preview = top_chunk.get("content_preview") or ""
-        chunk_type = top_chunk.get("chunk_type") or "code"
+        top_preview = top_chunk.get("content_preview") or (top_chunk.get("chunk").content if top_chunk.get("chunk") else "")
+        chunk_type = top_chunk.get("chunk_type") or (top_chunk.get("chunk").chunk_type if top_chunk.get("chunk") else "code")
 
         # Dynamically determine failure_type
-        if "pytest" in chunk_type or "test" in query_text.lower() or "assert" in top_preview.lower():
+        if "pytest" in str(chunk_type) or "test" in query_text.lower() or "assert" in str(top_preview).lower() or "log" in str(chunk_type):
             failure_type = "test_failure"
-        elif "stack_trace" in chunk_type or "exception" in top_preview.lower() or "error" in top_preview.lower():
+        elif "stack_trace" in str(chunk_type) or "exception" in str(top_preview).lower() or "error" in str(top_preview).lower():
             failure_type = "runtime_error"
         else:
             failure_type = "unknown"
