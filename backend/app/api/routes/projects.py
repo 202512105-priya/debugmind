@@ -66,43 +66,52 @@ def get_project(project_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{project_id}/repositories", response_model=RepositoryRead, status_code=status.HTTP_201_CREATED)
 def create_repository(project_id: int, repo_in: RepositoryCreate, db: Session = Depends(get_db)):
-    # Check if project exists
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Project with ID {project_id} not found"
+    try:
+        # Check if project exists
+        project = db.query(Project).filter(Project.id == project_id).first()
+        if not project:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Project with ID {project_id} not found"
+            )
+        
+        db_repo = Repository(
+            project_id=project_id,
+            name=repo_in.name,
+            source_type=repo_in.source_type,
+            root_path=repo_in.root_path,
+            clone_url=repo_in.clone_url
         )
-    
-    db_repo = Repository(
-        project_id=project_id,
-        name=repo_in.name,
-        source_type=repo_in.source_type,
-        root_path=repo_in.root_path,
-        clone_url=repo_in.clone_url
-    )
-    db.add(db_repo)
-    db.commit()
-    db.refresh(db_repo)
+        db.add(db_repo)
+        db.commit()
+        db.refresh(db_repo)
 
-    # Automatically scan, ingest, chunk & embed if root_path provided
-    from app.services.ingestion import RepositoryIngestionService
-    if repo_in.root_path:
-        try:
-            RepositoryIngestionService.scan_and_ingest(db, db_repo.id, repo_in.root_path)
-            db.refresh(db_repo)
-            from app.api.routes.repositories import chunk_repository
-            chunk_repository(db_repo.id, db)
-            db_repo.status = "completed"
-            db.add(db_repo)
-            db.commit()
-            db.refresh(db_repo)
-        except Exception as e:
-            print(f"Warning: Automatic ingestion for repo {db_repo.id} failed: {e}")
-            db.rollback()
-            db_repo = db.query(Repository).filter(Repository.id == db_repo.id).first()
+        # Automatically scan, ingest, chunk & embed if root_path provided
+        if repo_in.root_path:
+            try:
+                from app.services.ingestion import RepositoryIngestionService
+                RepositoryIngestionService.scan_and_ingest(db, db_repo.id, repo_in.root_path)
+                db.refresh(db_repo)
+                from app.api.routes.repositories import chunk_repository
+                chunk_repository(db_repo.id, db)
+                db_repo.status = "completed"
+                db.add(db_repo)
+                db.commit()
+                db.refresh(db_repo)
+            except Exception as ing_err:
+                print(f"Warning: Automatic ingestion for repo {db_repo.id} failed: {ing_err}")
+                db.rollback()
+                db_repo = db.query(Repository).filter(Repository.id == db_repo.id).first()
 
-    return db_repo
+        return db_repo
+    except HTTPException:
+        raise
+    except Exception as err:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create repository: {str(err)}"
+        )
 
 @router.get("/{project_id}/repositories", response_model=List[RepositoryRead])
 def list_repositories(project_id: int, db: Session = Depends(get_db)):
