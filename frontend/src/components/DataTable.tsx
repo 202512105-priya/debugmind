@@ -13,6 +13,7 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
   emptyMessage?: string;
   keyExtractor?: (row: T, index: number) => string | number;
+  selectedRowId?: string | number;
 }
 
 export function DataTable<T>({
@@ -21,6 +22,7 @@ export function DataTable<T>({
   onRowClick,
   emptyMessage = 'No items found',
   keyExtractor,
+  selectedRowId,
 }: DataTableProps<T>) {
   if (!data || data.length === 0) {
     return (
@@ -49,32 +51,39 @@ export function DataTable<T>({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-700/60">
-            {data.map((row, rowIndex) => (
-              <tr
-                key={keyExtractor ? keyExtractor(row, rowIndex) : rowIndex}
-                onClick={() => onRowClick && onRowClick(row)}
-                className={`${
-                  onRowClick
-                    ? 'cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors'
-                    : ''
-                }`}
-              >
-                {columns.map((col, colIndex) => (
-                  <td
-                    key={colIndex}
-                    className={`px-4 py-2.5 text-[12px] text-slate-700 dark:text-slate-200 whitespace-nowrap ${
-                      col.className || ''
-                    }`}
-                  >
-                    {col.cell
-                      ? col.cell(row)
-                      : col.accessorKey
-                      ? (row[col.accessorKey] as React.ReactNode)
-                      : null}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {data.map((row, rowIndex) => {
+              const rowKey = keyExtractor ? keyExtractor(row, rowIndex) : (row as any).id ?? rowIndex;
+              const isSelected = selectedRowId !== undefined && selectedRowId !== null && String(selectedRowId) === String(rowKey);
+
+              return (
+                <tr
+                  key={rowKey}
+                  onClick={() => onRowClick && onRowClick(row)}
+                  className={`transition-colors ${
+                    isSelected
+                      ? 'bg-blue-50/80 dark:bg-blue-950/50 border-l-4 border-l-blue-600 font-medium'
+                      : onRowClick
+                      ? 'cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-700/50'
+                      : ''
+                  }`}
+                >
+                  {columns.map((col, colIndex) => (
+                    <td
+                      key={colIndex}
+                      className={`px-4 py-2.5 text-[12px] text-slate-700 dark:text-slate-200 whitespace-nowrap ${
+                        col.className || ''
+                      }`}
+                    >
+                      {col.cell
+                        ? col.cell(row)
+                        : col.accessorKey
+                        ? (row[col.accessorKey] as React.ReactNode)
+                        : null}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

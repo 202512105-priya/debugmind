@@ -84,15 +84,21 @@ export const RepositoriesPage: React.FC = () => {
   const registerMutation = useMutation({
     mutationFn: (data: { name: string; source_type: string; root_path: string }) =>
       api.createRepository(id, data),
-    onSuccess: (newRepo) => {
-      queryClient.invalidateQueries({ queryKey: ['repositories', id] });
-      queryClient.invalidateQueries({ queryKey: ['repo-files', newRepo.id] });
-      queryClient.invalidateQueries({ queryKey: ['chunks', id] });
+    onSuccess: async (newRepo) => {
       setSelectedRepoId(newRepo.id);
       setIsRegisterOpen(false);
       setRepoName('');
       setRepoPath('');
-      showToast(`Repository ${newRepo.name} connected & indexed!`);
+      try {
+        await api.ingestRepository(newRepo.id);
+        await api.chunkRepository(newRepo.id);
+      } catch (err) {
+        console.warn('Auto-ingest note:', err);
+      }
+      queryClient.invalidateQueries({ queryKey: ['repositories', id] });
+      queryClient.invalidateQueries({ queryKey: ['repo-files', newRepo.id] });
+      queryClient.invalidateQueries({ queryKey: ['chunks', id] });
+      showToast(`Repository ${newRepo.name} connected, ingested & chunked!`);
     },
   });
 
@@ -513,6 +519,7 @@ export const RepositoriesPage: React.FC = () => {
             <DataTable
               columns={repoColumns}
               data={repos}
+              selectedRowId={activeRepoId || undefined}
               onRowClick={(row) => setSelectedRepoId(row.id)}
             />
           </div>
