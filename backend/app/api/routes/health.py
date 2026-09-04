@@ -32,5 +32,6 @@ def health_check(db: Session = Depends(get_db)):
     return {
         "status": status,
         "postgres": postgres_status,
-        "redis": redis_status
+        "redis": redis_status,
+        "version": "v1.0.5-cpp-fixed"
     }
