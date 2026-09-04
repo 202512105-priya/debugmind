@@ -40,7 +40,7 @@ class RepositoryIngestionService:
     }
 
     IGNORE_DIRS = {
-        ".git", "node_modules", ".venv", "venv", "__pycache__", "dist", "build"
+        ".git", "node_modules", ".venv", "venv", "__pycache__", "dist", "build", "pasted_text", "imports"
     }
 
     IGNORE_FILES = {

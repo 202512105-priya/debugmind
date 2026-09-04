@@ -1,5 +1,6 @@
 import time
 import json
+import re
 import logging
 from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
@@ -86,25 +87,19 @@ def query_planner_node(state: DebugAgentState, config: Optional[RunnableConfig] 
     db = get_db_from_config(config)
     run_id = state.get("agent_run_id", 0)
     query = state.get("query", "")
-    failure_type = state.get("failure_type", "test_failure")
     iteration = state.get("iteration_count", 0)
 
-    queries = []
-    if iteration == 0:
-        queries.append(query)
-        if failure_type == "test_failure":
-            queries.append("failed test assertion unauthorized 401")
-        elif failure_type == "runtime_error":
-            queries.append("runtime exception connection error")
-        else:
-            queries.append("error stack trace failure")
-    else:
-        # Iteration 1+ (Retry attempt with expanded terms)
-        queries.append(f"{query} validate_token tenant_id 401")
-        queries.append("middleware authentication authorization header")
+    queries = [query] if query else []
+    
+    # Extract query terms strictly from user input (avoid injecting fixed 401 strings)
+    words = [w.strip() for w in re.findall(r"\w+", query) if len(w) > 3]
+    if len(words) >= 2:
+        sub_q = " ".join(words[:4])
+        if sub_q not in queries:
+            queries.append(sub_q)
 
     latency = (time.time() - start_time) * 1000.0
-    input_payload = {"query": query, "failure_type": failure_type, "iteration": iteration}
+    input_payload = {"query": query, "iteration": iteration}
     output_payload = {"search_queries": queries}
 
     record_step(db, run_id, "query_planner", input_payload, output_payload, latency)
@@ -169,16 +164,14 @@ def root_cause_analyzer_node(state: DebugAgentState, config: Optional[RunnableCo
     chunks = state.get("retrieved_chunks", [])
     query = state.get("query", "")
 
-    all_text = " ".join([c.get("content_preview", "") for c in chunks])
-
-    if "401" in all_text or "validate_token" in all_text or "assertionerror" in all_text.lower():
-        hypothesis = "The request token validation failed or tenant_id is missing in auth middleware."
-    elif "attributeerror" in all_text.lower() or "nonetype" in all_text.lower():
-        hypothesis = "Connection object was uninitialized prior to invoking start_app."
-    elif chunks:
-        hypothesis = "Observed mismatch between test expectations and system implementation."
+    if not chunks:
+        hypothesis = "Insufficient evidence retrieved in connected codebase."
     else:
-        hypothesis = "Insufficient evidence retrieved to construct a valid hypothesis."
+        top_c = chunks[0]
+        fp = top_c.get("file_path", "source code")
+        sym = top_c.get("symbol_name")
+        sym_str = f" for symbol '{sym}'" if sym else ""
+        hypothesis = f"Evidence identified in {fp}{sym_str} matching query '{query}'."
 
     latency = (time.time() - start_time) * 1000.0
     input_payload = {"query": query, "chunks_count": len(chunks)}
