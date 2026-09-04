@@ -62,11 +62,14 @@ class RelevanceReranker:
             is_rag_meta_query = any(t in query_terms for t in {"rag", "generator", "reranker", "llm"})
 
             if is_user_auth_query and not is_rag_meta_query:
-                if chunk.file_path and ("user" in chunk.file_path.lower() or "projects.py" in chunk.file_path.lower() or "auth" in chunk.file_path.lower()):
-                    boost += 0.35
+                if chunk.symbol_name and "ensure_user_exists" in chunk.symbol_name.lower():
+                    boost += 0.60
+                    reasons.append("Symbol matches default user creation function.")
+                elif chunk.file_path and ("user" in chunk.file_path.lower() or "projects.py" in chunk.file_path.lower() or "auth" in chunk.file_path.lower()):
+                    boost += 0.45
                     reasons.append("File path matches user authentication domain query.")
-                elif chunk.file_path and ("rag_generator" in chunk.file_path.lower() or "reranker" in chunk.file_path.lower()):
-                    boost -= 0.30
+                if chunk.file_path and ("rag_generator" in chunk.file_path.lower() or "reranker" in chunk.file_path.lower()):
+                    boost -= 0.60
 
             # 3. Check error code/type matches
             if chunk.error_type:
