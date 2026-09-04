@@ -56,6 +56,18 @@ class RelevanceReranker:
             elif has_code_query_term and is_markdown:
                 boost -= 0.20
 
+            # 2c. Domain intent & meta-file filtering
+            user_auth_query_terms = {"user", "login", "bydefault", "default", "create", "signup", "auth", "password"}
+            is_user_auth_query = any(t in query_terms for t in user_auth_query_terms)
+            is_rag_meta_query = any(t in query_terms for t in {"rag", "generator", "reranker", "llm"})
+
+            if is_user_auth_query and not is_rag_meta_query:
+                if chunk.file_path and ("user" in chunk.file_path.lower() or "projects.py" in chunk.file_path.lower() or "auth" in chunk.file_path.lower()):
+                    boost += 0.35
+                    reasons.append("File path matches user authentication domain query.")
+                elif chunk.file_path and ("rag_generator" in chunk.file_path.lower() or "reranker" in chunk.file_path.lower()):
+                    boost -= 0.30
+
             # 3. Check error code/type matches
             if chunk.error_type:
                 e_type = chunk.error_type.lower()

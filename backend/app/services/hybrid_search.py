@@ -127,6 +127,17 @@ class HybridSearchService:
         repository_id: Optional[int] = None,
         uploaded_log_id: Optional[int] = None
     ) -> List[Dict[str, Any]]:
+        # Determine dynamic alpha if default alpha=0.65
+        if alpha == 0.65:
+            is_symbol_query = bool(re.search(r"^[a-zA-Z_]\w*\([^)]*\)$|^[a-zA-Z_]\w*$", query.strip()))
+            is_code_keyword = any(k in query.lower() for k in ("def ", "class ", "function", "bool", "int", "void", "const", "vector"))
+            is_nl_question = any(q_word in query.lower() for q_word in ("why ", "how ", "what ", "where ", "explain", "reason"))
+            
+            if is_symbol_query or is_code_keyword:
+                alpha = 0.25  # Prioritize exact BM25 keyword matching for code symbols
+            elif is_nl_question:
+                alpha = 0.75  # Prioritize semantic vector similarity for natural language questions
+
         # 1. Fetch Vector Candidates
         query_vector = EmbeddingService.get_embeddings([query])[0]
         is_sqlite = db.bind.dialect.name == "sqlite"
