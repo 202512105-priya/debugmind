@@ -83,6 +83,7 @@ def chunk_repository(repository_id: int, db: Session = Depends(get_db)):
             detail=f"Repository with ID {repository_id} not found"
         )
 
+    db.refresh(repo)
     # 1. Clear previous chunks for all code files in this repository
     file_ids = [f.id for f in repo.code_files]
     if file_ids:

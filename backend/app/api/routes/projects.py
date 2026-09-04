@@ -90,6 +90,7 @@ def create_repository(project_id: int, repo_in: RepositoryCreate, db: Session = 
     if repo_in.root_path:
         try:
             RepositoryIngestionService.scan_and_ingest(db, db_repo.id, repo_in.root_path)
+            db.refresh(db_repo)
             from app.api.routes.repositories import chunk_repository
             chunk_repository(db_repo.id, db)
             db_repo.status = "completed"
@@ -98,6 +99,8 @@ def create_repository(project_id: int, repo_in: RepositoryCreate, db: Session = 
             db.refresh(db_repo)
         except Exception as e:
             print(f"Warning: Automatic ingestion for repo {db_repo.id} failed: {e}")
+            db.rollback()
+            db_repo = db.query(Repository).filter(Repository.id == db_repo.id).first()
 
     return db_repo
 
